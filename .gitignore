@@ -1,1 +1,3 @@
 nimcache/
+!tests/*.nim
+!tests/nim.cfg
