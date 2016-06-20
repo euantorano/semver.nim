@@ -4,118 +4,131 @@ import lexbase
 from streams import Stream
 from strutils import `%`, parseInt
 
+import common
+
 const
-  decimalPoint: char = '.'
-  buildSeparator: char = '-'
-  metaDataSeparator: char = '+'
+  decimalPoint*: char = '.'
+  buildSeparator*: char = '-'
+  metaDataSeparator*: char = '+'
 
 type
   TokenKind = enum
-    tkInvalid, tkPoint, tkDigit, tkDash, tkPlus, tkEof
+    ## The type of the current token the cursor is on.
+    tkInvalid, tkPoint, tkDigit, tkBuildSeparator, tkMetadataSeparator, tkEof
   Token = object
-    literal: string
+    ## A token has a type and a literal value.
     kind: TokenKind
-  SemverParser* = object of BaseLexer
-    tok: Token
-    data: string
-    hasFoundStartDigit: bool
-  EventKind* = enum
-    ekDigit, ekPrerelease, ekBuild, ekEof, ekError
-  SemverParserEvent* = object of RootObj
+    literal: string
+
+  EventKind* {.pure.} = enum
+    ## The parser returns events on each call to next, each event has an assigned kind.
+    digit, prerelease, build, eof, error
+  ParserEvent* = object
     case kind*: EventKind
-    of ekEof: nil
-    of ekDigit:
+    of EventKind.digit:
       value*: int
-    of ekBuild:
-      build*: string
-    of ekPrerelease:
-      prerelease: string
-    of ekError:
-      msg*: string
+    of EventKind.prerelease, EventKind.build:
+      content*: string
+    of EventKind.error:
+      errorMessage*: string
+    else: discard
 
-  ParseError = object of Exception
+  SemverParser* = object of BaseLexer
+    ## Parser used to parse semantic version strings.
+    data: string
+    currentToken: Token
 
-proc errorStr*(p: SemverParser, msg: string): string =
-  ## returns a properly formated error message containing current line and
-  ## column information.
-  result = `%`("($1, $2) Error: $3",
-               [$p.linenumber, $getColNumber(p, p.bufpos), msg])
+proc errorStr*(p: SemverParser, msg: string): string = `%`("($1, $2) Error: $3", [$p.linenumber, $getColNumber(p, p.bufpos), msg])
+  ## Returns a properly formatted error.
 
-proc rawGetTok(p: var SemverParser, tok: var Token) {.gcsafe.}
+proc rawGetTok(p: var SemverParser, tok: var Token)
+  ## Advance the parser, setting the current token to the next token.
 
-proc open*(p: var SemverParser, input: Stream) =
+proc skipStartCharacters(p: var SemverParser) {.raises: [ParseError].} =
+  ## Skip any preceeding '=' and 'v'.
+  while true:
+    case p.buf[p.bufpos]
+    of '=':
+      inc(p.bufpos)
+    of 'v':
+      inc(p.bufpos)
+    else: break # Any other (in)valid characters will be handled later.
+
+proc open*(p: var SemverParser, input: Stream) {.raises: [ParseError, Exception].} =
+  ## Open the parser, with the given input.
   lexbase.open(p, input)
-  p.tok.kind = tkInvalid
-  p.tok.literal = ""
-  p.hasFoundStartDigit = false
-  rawGetTok(p, p.tok)
+  p.currentToken.kind = tkInvalid
+  p.currentToken.literal = ""
+  skipStartCharacters(p)
+  rawGetTok(p, p.currentToken)
+  if p.currentToken.kind != tkDigit:
+    raise newException(ParseError, "Invalid start token: " & p.currentToken.literal)
 
-proc close*(p: var SemverParser) =
-  lexbase.close(p)
+proc close*(p: var SemverParser) = lexbase.close(p)
+  ## Close the parser
 
-proc getDigit(p: var SemverParser, tok: var Token): SemverParserEvent =
-  ## Read a digit value, up to a point or other separator.
-  result.kind = ekDigit
+proc getDigit(p: var SemverParser, tok: var Token) =
+  ## Get a digit from the parser.
+  var pos = p.bufpos
   var buf = p.buf
   tok.kind = tkDigit
+
   var ch: char
+
   while true:
-    ch = buf[p.bufpos]
-    case ch
-    of '0':
-      # Can't have leading zeros, error
-      tok.kind = tkInvalid
-      break
-    of '1'..'9':
+    ch = buf[pos]
+    if ch in '0'..'9':
       add(tok.literal, ch)
-      inc(p.bufpos)
-    of decimalPoint:
-      result.value = parseInt(tok.literal)
-      tok.kind = tkPoint
-      break
-    else:
-      tok.kind = tkInvalid
-      break
+      inc(pos)
+    else: break
+  p.bufpos = pos
 
 proc rawGetTok(p: var SemverParser, tok: var Token) =
-  tok.kind = tkInvalid
+  ## Advance the parser, setting the current token to the next token.
   setLen(tok.literal, 0)
+
   case p.buf[p.bufpos]
   of '0'..'9':
-    tok.kind = tkDigit
-    tok.literal = tok.literal & p.buf[p.bufpos]
-    p.hasFoundStartDigit = true
-    inc(p.bufpos)
+    getDigit(p, tok)
   of decimalPoint:
     tok.kind = tkPoint
     inc(p.bufpos)
     tok.literal = "."
-    if not p.hasFoundStartDigit:
-      raise newException(ParseError, "Version must start with a digit")
   of buildSeparator:
-    echo "BUILD"
-    inc(p.bufPos)
-    # TODO: getBuild
-  of metaDataSeparator:
-    echo "METADATA"
+    tok.kind = tkBuildSeparator
     inc(p.bufpos)
+    tok.literal = $buildSeparator
+  of metaDataSeparator:
+    tok.kind = tkMetadataSeparator
+    inc(p.bufpos)
+    tok.literal = $metaDataSeparator
   of lexbase.EndOfFile:
     tok.kind = tkEof
     tok.literal = "[EOF]"
   else:
-    echo "OTHER"
+    tok.kind = tkInvalid
+    tok.literal = $p.buf[p.bufpos]
+
+proc getDigitValue(p: var SemverParser, tok: var Token): ParserEvent =
+  ## Get the current digit value
+  if tok.kind == tkDigit:
+    result.kind = EventKind.digit
+    result.value = parseInt(tok.literal)
     inc(p.bufpos)
 
-proc next*(p: var SemverParser): SemverParserEvent =
-  case p.tok.kind:
+  rawGetTok(p, tok)
+
+proc next*(p: var SemverParser): ParserEvent =
+  ## Get the next event from the parser.
+  case p.currentToken.kind:
   of tkEof:
-    result.kind = ekEof
+    result.kind = EventKind.eof
   of tkDigit:
-    result = getDigit(p, p.tok)
+    result = getDigitValue(p, p.currentToken)
   of tkPoint:
     inc(p.bufpos)
-    rawGetTok(p, p.tok)
+    rawGetTok(p, p.currentToken)
   else:
-    result.kind = ekError
-    result.msg = errorStr(p, "invalid token: " & p.tok.literal)
-    rawGetTok(p, p.tok)
+    result.kind = EventKind.error
+    result.errorMessage = errorStr(p, "invalid token: " & p.currentToken.literal)
+    rawGetTok(p, p.currentToken)

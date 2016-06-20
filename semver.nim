@@ -2,7 +2,10 @@
 
 from strutils import strip, Whitespace
 from streams import newStringStream
+
 import private/semver_parser
+import private/common
+export common
 
 const
   VERSION_STRING_TRIM_CHARS: set[char] = Whitespace + {'=', 'v'}
@@ -20,6 +23,7 @@ type
   InvalidVersionError* = object of Exception
     ## Error thrown when a given version string is an invalid version.
 
+
 proc isPublicApiStable*(v: Version): bool =
   ## Whether the public API should be considered stable:
   ##
@@ -31,17 +35,6 @@ proc isPrerelease*(v: Version): bool =
   ##
   ##  A pre-release version MAY be denoted by appending a hyphen and a series of dot separated identifiers immediately following the patch version.
   result = len(v.prerelease) > 0
-
-proc cleanVersionString*(version: string): string {.raises: [InvalidVersionError].} =
-  ## Clean a provided version string, removing leading and trailing whitespace and leading '=' and 'v' characters.
-  if len(version) == 0:
-    raise newException(InvalidVersionError, "Version string cannot be empty")
-
-  # Trim whitespace, 'v' and '=' from the start of the version.
-  result = version.strip(leading = true, trailing = false, chars = VERSION_STRING_TRIM_CHARS)
-
-  # Trim whitespace from the end of the vesion.
-  result = result.strip(leading = false, trailing = true)
 
 proc newVersion*(major, minor, patch: int, prerelease = "", build = ""): Version {.raises: [InvalidVersionError].} =
   ## Create a new version using the given major, minor and patch values, with the given build and metadata information.
@@ -58,21 +51,32 @@ proc newVersion*(major, minor, patch: int, prerelease = "", build = ""): Version
   result.build = build
 
 proc parseVersion*(s: string): Version {.raises: [InvalidVersionError, Exception].} =
-  let versionString = cleanVersionString(s)
-
   new result
 
-  let stringStream = newStringStream(versionString)
+  let stringStream = newStringStream(s)
   var parser: SemverParser
   parser.open(stringStream)
   defer: close(parser)
 
+  var numDigits: int = 0
+
   while true:
     var evt = parser.next()
     case evt.kind
-    of ekEof:
+    of EventKind.eof:
       break
-    of ekDigit:
-      echo "DECIMAL: " & $evt.value
+    of EventKind.digit:
+      case numDigits
+      of 0:
+        result.major = evt.value
+      of 1:
+        result.minor = evt.value
+      of 2:
+        result.patch = evt.value
+      else: raise newException(ParseError, "Too many integer values in version")
+      inc numDigits
     else:
       echo "EVENT: " & $evt
+
+  if numDigits != 3:
+    raise newException(ParseError, "Not enough integer values in version")
