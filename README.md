@@ -2,7 +2,7 @@
 
 [Semantic versioning](http://semver.org/) parser for Nim.
 
-ALlows the parsing of version strings into objects and the comparing of version objects.
+Allows the parsing of version strings into objects and the comparing of version objects.
 
 ## Installation
 
