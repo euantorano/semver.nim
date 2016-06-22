@@ -15,14 +15,12 @@ type
     major*: int
     minor*: int
     patch*: int
-    prerelease*: string
-    build*: string # TODO: Parse metadata
+    build*: string
+    metadata*: string
   Version* = ref VersionObj
     ## Represents a version.
-
   InvalidVersionError* = object of Exception
     ## Error thrown when a given version string is an invalid version.
-
 
 proc isPublicApiStable*(v: Version): bool =
   ## Whether the public API should be considered stable:
@@ -34,9 +32,9 @@ proc isPrerelease*(v: Version): bool =
   ## Whether the given version is a pre-release version:
   ##
   ##  A pre-release version MAY be denoted by appending a hyphen and a series of dot separated identifiers immediately following the patch version.
-  result = len(v.prerelease) > 0
+  result = len(v.build) > 0
 
-proc newVersion*(major, minor, patch: int, prerelease = "", build = ""): Version {.raises: [InvalidVersionError].} =
+proc newVersion*(major, minor, patch: int, build = "", metadata = ""): Version {.raises: [InvalidVersionError].} =
   ## Create a new version using the given major, minor and patch values, with the given build and metadata information.
   ## If the major, minor or patch is negative, an InvalidVersionError is thrown.
   if major < 0 or minor < 0 or patch < 0:
@@ -47,8 +45,8 @@ proc newVersion*(major, minor, patch: int, prerelease = "", build = ""): Version
   result.major = major
   result.minor = minor
   result.patch = patch
-  result.prerelease = prerelease
   result.build = build
+  result.metadata = metadata
 
 proc parseVersion*(s: string): Version {.raises: [InvalidVersionError, Exception].} =
   new result
@@ -73,10 +71,9 @@ proc parseVersion*(s: string): Version {.raises: [InvalidVersionError, Exception
         result.minor = evt.value
       of 2:
         result.patch = evt.value
-      else: raise newException(ParseError, "Too many integer values in version")
+      else: raise newException(ParseError, "Too many integer values in version: " & $numDigits)
       inc numDigits
-    else:
-      echo "EVENT: " & $evt
+    else: discard
 
   if numDigits != 3:
     raise newException(ParseError, "Not enough integer values in version")

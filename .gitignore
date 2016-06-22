@@ -1,3 +1,5 @@
 nimcache/
 !tests/*.nim
 !tests/nim.cfg
+tests/*
+nimsuggest.log

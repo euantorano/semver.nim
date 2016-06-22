@@ -22,7 +22,7 @@ type
 
   EventKind* {.pure.} = enum
     ## The parser returns events on each call to next, each event has an assigned kind.
-    digit, prerelease, build, eof, error
+    digit, prerelease, build, eof, error, skip
   ParserEvent* = object
     case kind*: EventKind
     of EventKind.digit:
@@ -44,13 +44,11 @@ proc errorStr*(p: SemverParser, msg: string): string = `%`("($1, $2) Error: $3",
 proc rawGetTok(p: var SemverParser, tok: var Token)
   ## Advance the parser, setting the current token to the next token.
 
-proc skipStartCharacters(p: var SemverParser) {.raises: [ParseError].} =
+proc skipStartCharacters(p: var SemverParser) =
   ## Skip any preceeding '=' and 'v'.
   while true:
     case p.buf[p.bufpos]
-    of '=':
-      inc(p.bufpos)
-    of 'v':
+    of '=', 'v':
       inc(p.bufpos)
     else: break # Any other (in)valid characters will be handled later.
 
@@ -61,46 +59,25 @@ proc open*(p: var SemverParser, input: Stream) {.raises: [ParseError, Exception]
   p.currentToken.literal = ""
   skipStartCharacters(p)
   rawGetTok(p, p.currentToken)
-  if p.currentToken.kind != tkDigit:
-    raise newException(ParseError, "Invalid start token: " & p.currentToken.literal)
 
 proc close*(p: var SemverParser) = lexbase.close(p)
   ## Close the parser
 
-proc getDigit(p: var SemverParser, tok: var Token) =
-  ## Get a digit from the parser.
-  var pos = p.bufpos
-  var buf = p.buf
-  tok.kind = tkDigit
-
-  var ch: char
-
-  while true:
-    ch = buf[pos]
-    if ch in '0'..'9':
-      add(tok.literal, ch)
-      inc(pos)
-    else: break
-  p.bufpos = pos
-
 proc rawGetTok(p: var SemverParser, tok: var Token) =
   ## Advance the parser, setting the current token to the next token.
   setLen(tok.literal, 0)
-
   case p.buf[p.bufpos]
   of '0'..'9':
-    getDigit(p, tok)
+    tok.kind = tkDigit
+    tok.literal = $p.buf[p.bufpos]
   of decimalPoint:
     tok.kind = tkPoint
-    inc(p.bufpos)
     tok.literal = "."
   of buildSeparator:
     tok.kind = tkBuildSeparator
-    inc(p.bufpos)
     tok.literal = $buildSeparator
   of metaDataSeparator:
     tok.kind = tkMetadataSeparator
-    inc(p.bufpos)
     tok.literal = $metaDataSeparator
   of lexbase.EndOfFile:
     tok.kind = tkEof
@@ -109,13 +86,19 @@ proc rawGetTok(p: var SemverParser, tok: var Token) =
     tok.kind = tkInvalid
     tok.literal = $p.buf[p.bufpos]
 
+proc readDigit(p: var SemverParser, tok: var Token) =
+  while true:
+    inc(p.bufpos)
+    case p.buf[p.bufpos]:
+    of '0'..'9':
+      add(tok.literal, p.buf[p.bufpos])
+    else: break
+
 proc getDigitValue(p: var SemverParser, tok: var Token): ParserEvent =
   ## Get the current digit value
-  if tok.kind == tkDigit:
-    result.kind = EventKind.digit
-    result.value = parseInt(tok.literal)
-    inc(p.bufpos)
-
+  readDigit(p, tok)
+  result.kind = EventKind.digit
+  result.value = parseInt(tok.literal)
   rawGetTok(p, tok)
 
 proc next*(p: var SemverParser): ParserEvent =
@@ -127,6 +110,11 @@ proc next*(p: var SemverParser): ParserEvent =
     result = getDigitValue(p, p.currentToken)
   of tkPoint:
     inc(p.bufpos)
+    result.kind = EventKind.skip
+    rawGetTok(p, p.currentToken)
+  of tkBuildSeparator:
+    inc(p.bufpos)
+    result.kind = EventKind.skip
     rawGetTok(p, p.currentToken)
   else:
     result.kind = EventKind.error

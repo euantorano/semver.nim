@@ -38,3 +38,10 @@ suite "semver tests":
     except ParseError:
       check true
 
+  test "parse with build":
+    let str = "1.0.0-alpha"
+    let ver = parseVersion(str)
+    check ver.major == 1
+    check ver.minor == 2
+    check ver.patch == 3
+    check ver.build == "alpha"
