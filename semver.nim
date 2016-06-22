@@ -1,6 +1,5 @@
 ## Semantic versioning parser for Nim.
 
-from strutils import strip, Whitespace
 from streams import newStringStream
 
 import private/semver_parser
