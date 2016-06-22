@@ -78,3 +78,57 @@ suite "semver tests":
       discard parseVersion(str)
     except ParseError:
       check getCurrentExceptionMsg() == "(1, 0) Error: invalid token: a"
+
+  test "convert version to string":
+    let ver = newVersion(1, 2, 3, "alpha", "001")
+    check $ver == "1.2.3-alpha+001"
+
+  test "Check whether two versions are equal":
+    let ver1 = newVersion(1, 2, 3, "alpha", "001")
+    let ver2 = newVersion(1, 2, 3, "alpha", "001")
+    check isEqual(ver1, ver2) == true
+
+  test "Check whether two versions are not equal":
+    let ver1 = newVersion(1, 2, 3, "alpha", "001")
+    let ver2 = newVersion(1, 2, 4, "alpha", "001")
+    check isEqual(ver1, ver2) == false
+
+  test "Check whether two versions are equal with operator":
+    let ver1 = newVersion(1, 2, 3, "alpha", "001")
+    let ver2 = newVersion(1, 2, 3, "alpha", "001")
+    check ver1 == ver2
+
+  test "Check whether two versions are not equal with operator":
+    let ver1 = newVersion(1, 2, 3, "alpha", "001")
+    let ver2 = newVersion(1, 2, 4, "alpha", "001")
+    check ver1 != ver2
+
+  test "Check whether version 1 is greater than version 2":
+    let ver1 = newVersion(1, 2, 4, "alpha", "001")
+    let ver2 = newVersion(1, 2, 3, "alpha", "001")
+    check isGreaterThan(ver1, ver2)
+
+  test "Check whether version 1 is less than version 2":
+    let ver1 = newVersion(1, 2, 4, "alpha", "001")
+    let ver2 = newVersion(1, 2, 6, "alpha", "001")
+    check isLessThan(ver1, ver2)
+
+  test "Check whether version 1 is greater than version 2 with operator":
+    let ver1 = newVersion(1, 2, 4, "alpha", "001")
+    let ver2 = newVersion(1, 2, 3, "alpha", "001")
+    check ver1 > ver2
+
+  test "Check whether version 1 is less than version 2 with operator":
+    let ver1 = newVersion(1, 2, 4, "alpha", "001")
+    let ver2 = newVersion(1, 2, 6, "alpha", "001")
+    check ver1 < ver2
+
+  test "Check whether version 1 is greater than or equal to version 2 with operator":
+    let ver1 = newVersion(1, 2, 4, "alpha", "001")
+    let ver2 = newVersion(1, 2, 4, "alpha", "001")
+    check ver1 >= ver2
+
+  test "Check whether version 1 is less than or equal to version 2 with operator":
+    let ver1 = newVersion(1, 2, 6, "alpha", "001")
+    let ver2 = newVersion(1, 2, 6, "alpha", "001")
+    check ver1 <= ver2

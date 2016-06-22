@@ -46,6 +46,7 @@ proc newVersion*(major, minor, patch: int, build = "", metadata = ""): Version {
   result.metadata = metadata
 
 proc parseVersion*(s: string): Version {.raises: [ParseError, Exception].} =
+  ## Parse the given string `s` into a Version.
   new result
   result.build = ""
   result.metadata = ""
@@ -87,3 +88,78 @@ proc parseVersion*(s: string): Version {.raises: [ParseError, Exception].} =
 
   if numDigits != 3:
     raise newException(ParseError, "Not enough integer values in version")
+
+proc `$`*(v: Version): string =
+  ## Convert the given version to a string.
+  result = $v.major & "." & $v.minor & "." & $v.patch
+  if len(v.build) > 0:
+    result &= "-" & v.build
+  if len(v.metadata) > 0:
+    result &= "+" & v.metadata
+
+proc isEqual*(v1: Version, v2: Version, ignoreBuildAndMetadata: bool = false): bool =
+  ## Check whether two versions are equal, optionally excluding the build and metadata.
+  if v1.major != v2.major:
+    return false
+  if v1.minor != v2.minor:
+    return false
+  if v1.patch != v2.patch:
+    return false
+
+  if not ignoreBuildAndMetadata:
+    if v1.build != v2.build:
+      return false
+    if v1.metadata != v2.metadata:
+      return false
+
+  return true
+
+proc `==`*(v1: Version, v2: Version): bool = isEqual(v1, v2, false)
+  ## Check whether two versions are equal.
+
+proc `!=`*(v1: Version, v2: Version): bool = not isEqual(v1, v2, false)
+  ## Check whether two versions are not equal.
+
+proc isLessThan*(v1: Version, v2: Version): bool =
+  ## Check whether v1 is less than v2.
+  ## Note that this currently only does a string comparison on the build tag, and needs expanding as per item #11 of the semver specification.
+  if v1.major < v2.major:
+    return true
+  if v1.minor < v2.minor:
+    return true
+  if v1.patch < v2.patch:
+    return true
+  if v1.build < v2.build:
+    return true
+  return false
+
+proc isGreaterThan*(v1: Version, v2: Version): bool =
+  ## Check whether v1 is greater than v2.
+  ## Note that this currently only does a string comparison on the build tag, and needs expanding as per item #11 of the semver specification.
+  if v1.major > v2.major:
+    return true
+  if v1.minor > v2.minor:
+    return true
+  if v1.patch > v2.patch:
+    return true
+  if v1.build > v2.build:
+    return true
+  return false
+
+proc `>`*(v1: Version, v2: Version): bool = isGreaterThan(v1, v2)
+  ## Check whether v1 is greater than v2.
+  ## Note that this currently only does a string comparison on the build tag, and needs expanding as per item #11 of the semver specification.
+
+proc `<`*(v1: Version, v2: Version): bool = isLessThan(v1, v2)
+  ## Check whether v1 is less than v2.
+  ## Note that this currently only does a string comparison on the build tag, and needs expanding as per item #11 of the semver specification.
+
+proc `>=`*(v1: Version, v2: Version): bool =
+  ## Check whether v1 is greater than or equal to v2.
+  ## Note that this currently only does a string comparison on the build tag, and needs expanding as per item #11 of the semver specification.
+  result = isEqual(v1, v2) or isGreaterThan(v1, v2)
+
+proc `<=`*(v1: Version, v2: Version): bool =
+  ## Check whether v1 is less than or equal to v2.
+  ## Note that this currently only does a string comparison on the build tag, and needs expanding as per item #11 of the semver specification.
+  result = isEqual(v1, v2) or isLessThan(v1, v2)
