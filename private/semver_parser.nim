@@ -51,7 +51,7 @@ proc skipStartCharacters(p: var SemverParser) =
       inc(p.bufpos)
     else: break # Any other (in)valid characters will be handled later.
 
-proc open*(p: var SemverParser, input: Stream) {.raises: [ParseError, Exception].} =
+proc open*(p: var SemverParser, input: Stream) =
   ## Open the parser, with the given input.
   lexbase.open(p, input)
   p.tok.kind = tkInvalid
