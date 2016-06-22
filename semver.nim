@@ -7,9 +7,6 @@ import private/semver_parser
 import private/common
 export common
 
-const
-  VERSION_STRING_TRIM_CHARS: set[char] = Whitespace + {'=', 'v'}
-
 type
   VersionObj = object
     major*: int
@@ -48,8 +45,10 @@ proc newVersion*(major, minor, patch: int, build = "", metadata = ""): Version {
   result.build = build
   result.metadata = metadata
 
-proc parseVersion*(s: string): Version {.raises: [InvalidVersionError, Exception].} =
+proc parseVersion*(s: string): Version {.raises: [ParseError, Exception].} =
   new result
+  result.build = ""
+  result.metadata = ""
 
   let stringStream = newStringStream(s)
   var parser: SemverParser
@@ -73,7 +72,18 @@ proc parseVersion*(s: string): Version {.raises: [InvalidVersionError, Exception
         result.patch = evt.value
       else: raise newException(ParseError, "Too many integer values in version: " & $numDigits)
       inc numDigits
-    else: discard
+    of EventKind.build:
+      if len(evt.content) < 1:
+        raise newException(ParseError, "Build data should be 1 or more characters long")
+      result.build = evt.content
+    of EventKind.metadata:
+      if len(evt.content) < 1:
+        raise newException(ParseError, "Metadata should be 1 or more characters long")
+      result.metadata = evt.content
+    of EventKind.error:
+      raise newException(ParseError, evt.errorMessage)
+    else:
+      echo "OTHER EVENT: " & $evt
 
   if numDigits != 3:
     raise newException(ParseError, "Not enough integer values in version")
