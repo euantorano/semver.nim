@@ -1,4 +1,4 @@
-# semver.nim
+# semver.nim ![Build Status](https://api.travis-ci.org/euantorano/semver.nim.svg)
 
 [Semantic versioning](http://semver.org/) parser for Nim.
 
