@@ -154,7 +154,7 @@ proc compare(v1: Version, v2: Version, ignoreBuild: bool = false): int =
 
 proc isEqual*(v1: Version, v2: Version, ignoreBuild: bool = false): bool =
   ## Check whether two versions are equal, optionally excluding the build and metadata.
-  return compare(v1, v2, false) == 0
+  result = (compare(v1, v2, false) == 0)
 
 proc `==`*(v1: Version, v2: Version): bool = isEqual(v1, v2, false)
   ## Check whether two versions are equal.
@@ -164,11 +164,11 @@ proc `!=`*(v1: Version, v2: Version): bool = not isEqual(v1, v2, false)
 
 proc isLessThan*(v1: Version, v2: Version): bool =
   ## Check whether v1 is less than v2.
-  return compare(v1, v2, false) < 0
+  result = (compare(v1, v2, false) < 0)
 
 proc isGreaterThan*(v1: Version, v2: Version): bool =
   ## Check whether v1 is greater than v2.
-  return compare(v1, v2, false) > 0
+  result = (compare(v1, v2, false) > 0)
 
 proc `>`*(v1: Version, v2: Version): bool = isGreaterThan(v1, v2)
   ## Check whether v1 is greater than v2.
