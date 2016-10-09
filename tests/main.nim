@@ -132,3 +132,20 @@ suite "semver tests":
     let ver1 = newVersion(1, 2, 6, "alpha", "001")
     let ver2 = newVersion(1, 2, 6, "alpha", "001")
     check ver1 <= ver2
+
+  test "semver.org example: 1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta < 1.0.0-beta.2 < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0.":
+    let ver1 = newVersion(1, 0, 0)
+    let ver2 = newVersion(1, 0, 0, "alpha")
+    let ver3 = newVersion(1, 0, 0, "alpha.1")
+    let ver4 = newVersion(1, 0, 0, "alpha.beta")
+    let ver5 = newVersion(1, 0, 0, "beta")
+    let ver6 = newVersion(1, 0, 0, "beta.2")
+    let ver7 = newVersion(1, 0, 0, "beta.11")
+    let ver8 = newVersion(1, 0, 0, "rc.1")
+    check ver2 < ver3
+    check ver3 < ver4
+    check ver4 < ver5
+    check ver5 < ver6
+    check ver6 < ver7
+    check ver7 < ver8
+    check ver8 < ver1
