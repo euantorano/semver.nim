@@ -1,9 +1,11 @@
 # Package
 
-version       = "1.0.0"
+version       = "1.0.3"
 author        = "Euan T"
 description   = "Semantic versioning parser for Nim."
 license       = "BSD3"
+
+srcDir = "src"
 
 # Dependencies
 
