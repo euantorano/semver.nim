@@ -4,9 +4,9 @@ import strutils
 
 from streams import newStringStream
 
-import private/semver_parser
-import private/common
-export common
+import semver/private/parser, semver/private/errors
+
+export errors
 
 type
   VersionObj = object
@@ -17,8 +17,7 @@ type
     metadata*: string
   Version* = ref VersionObj
     ## Represents a version.
-  InvalidVersionError* = object of Exception
-    ## Error thrown when a given version string is an invalid version.
+
 
 proc isPublicApiStable*(v: Version): bool =
   ## Whether the public API should be considered stable:

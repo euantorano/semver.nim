@@ -4,7 +4,7 @@ import lexbase
 from streams import Stream
 from strutils import `%`, parseInt
 
-import common
+import errors
 
 const
   decimalPoint*: char = '.'
