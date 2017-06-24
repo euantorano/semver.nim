@@ -1,23 +1,36 @@
 ## Semantic versioning parser for Nim.
+##
+## Example
+## --------
+##
+## .. code-block::nim
+##    import semver
+##
+##    let minVersion = newVersion(1, 0, 0)
+##    let parsedVersion = v"1.23.45"
+##
+##    if parsedVersion < minVersion:
+##      echo "You do not meet the minimum required version"
+##    else:
+##      echo "You are using a version with the following details: "
+##      echo "Major: ", parsedVerison.major
+##      echo "Minor: ", parsedVerison.minor
+##      echo "Patch Level: ", parsedVerison.patch
+##
 
-import strutils
-
-from streams import newStringStream
+import strutils, streams
 
 import semver/private/parser, semver/private/errors
-
 export errors
 
 type
-  VersionObj = object
+  Version* = object
+    ## Represents a version.
     major*: int
     minor*: int
     patch*: int
     build*: string
     metadata*: string
-  Version* = ref VersionObj
-    ## Represents a version.
-
 
 proc isPublicApiStable*(v: Version): bool =
   ## Whether the public API should be considered stable:
@@ -37,20 +50,25 @@ proc newVersion*(major, minor, patch: int, build = "", metadata = ""): Version {
   if major < 0 or minor < 0 or patch < 0:
     raise newException(InvalidVersionError, "Major, minor and patch must be positive. Got: " & $major & ", " & $minor & ", " & $patch)
 
-  new result
-  result.major = major
-  result.minor = minor
-  result.patch = patch
-  result.build = build
-  result.metadata = metadata
+  result = Version(
+    major: major,
+    minor: minor,
+    patch: patch,
+    build: build,
+    metadata: metadata
+  )
 
-proc parseVersion*(s: string): Version {.raises: [ParseError, Exception].} =
-  ## Parse the given string `s` into a Version.
-  new result
-  result.build = ""
-  result.metadata = ""
+proc parseVersion*(versionString: string): Version {.raises: [ParseError, Exception].} =
+  ## Parse the given string `versionString` into a Version.
+  result = Version(
+    major: 0,
+    minor: 0,
+    patch: 0,
+    build: "",
+    metadata: ""
+  )
 
-  let stringStream = newStringStream(s)
+  let stringStream = newStringStream(versionString)
   var parser: SemverParser
   parser.open(stringStream)
   defer: close(parser)
@@ -88,6 +106,12 @@ proc parseVersion*(s: string): Version {.raises: [ParseError, Exception].} =
   if numDigits != 3:
     raise newException(ParseError, "Not enough integer values in version")
 
+template v*(versionString: string): Version =
+  ## Parse the given string `versionString` into a Version.
+  ##
+  ## This is a shortcut for the `parseVersion` function.
+  parseVersion(versionString)
+
 proc `$`*(v: Version): string =
   ## Convert the given version to a string.
   result = $v.major & "." & $v.minor & "." & $v.patch
@@ -115,7 +139,6 @@ proc compare(v1: Version, v2: Version, ignoreBuild: bool = false): int =
     return cmpPatch
 
   if not ignoreBuild:
-
     # Comparison if a version has no prerelease versions
     if len(v1.build) == 0 and len(v2.build) == 0:
       return 0
@@ -125,11 +148,12 @@ proc compare(v1: Version, v2: Version, ignoreBuild: bool = false): int =
       return -1
 
     # split build version by dots and compare each identifier
-    var i = 0
-    var build1 = split(v1.build, ".")
-    var build2 = split(v2.build, ".")
+    var
+      i = 0
+      build1 = split(v1.build, ".")
+      build2 = split(v2.build, ".")
+      comp: int
     while i < len(build1) and i < len(build2):
-      var comp: int
       if isDigit(build1[i]) and isDigit(build2[i]):
         comp = cmp(parseInt(build1[i]), parseInt(build2[i]))
       else:

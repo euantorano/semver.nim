@@ -12,6 +12,12 @@ suite "semver tests":
     check version.minor == 0
     check version.patch == 0
 
+  test "shortcut version parser":
+    let version = v"1.23.45"
+    check version.major == 1
+    check version.minor == 23
+    check version.patch == 45
+
   test "parse simple full version":
     const str = "v1.20.3"
     let version = parseVersion(str)

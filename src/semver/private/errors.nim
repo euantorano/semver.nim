@@ -1,4 +1,4 @@
-## Common error types.
+## Errors that can occur whilst parsing and comparing versions.
 
 type
   InvalidVersionError* = object of Exception

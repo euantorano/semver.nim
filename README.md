@@ -1,4 +1,4 @@
-# semver.nim ![Build Status](https://api.travis-ci.org/euantorano/semver.nim.svg)
+# semver.nim ![Build Status](https://api.travis-ci.org/euantorano/semver.nim.svg) [![CircleCI](https://circleci.com/gh/euantorano/semver.nim/tree/master.svg?style=svg)](https://circleci.com/gh/euantorano/semver.nim/tree/master)
 
 [Semantic versioning](http://semver.org/) parser for Nim.
 
@@ -9,6 +9,16 @@ Allows the parsing of version strings into objects and the comparing of version 
 ```
 nimble install semver
 ```
+
+Or add the following to your .nimble file:
+
+```
+# Dependencies
+
+requires "semver >= 1.1.0"
+```
+
+## [API Documentation](https://htmlpreview.github.io/?https://github.com/euantorano/semver.nim/blob/master/docs/semver.html)
 
 ## Usage
 

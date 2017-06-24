@@ -1,0 +1,45 @@
+version: 2
+jobs:
+  build:
+    working_directory: /usr/src/semver
+    docker:
+      - image: nimlang/nim
+    branches:
+      only:
+        - master
+    steps:
+      - checkout
+      - run:
+          name: test
+          command: nim c -r tests/main.nim
+  build_dev:
+    working_directory: /usr/src/semver
+    docker:
+      - image: nimlang/nim:devel
+    branches:
+      only:
+        - master
+    steps:
+      - checkout
+      - run:
+          name: test
+          command: nim c -r tests/main.nim
+  build_alpine:
+    working_directory: /usr/src/semver
+    docker:
+      - image: nimlang/nim:alpine
+    branches:
+      only:
+        - master
+    steps:
+      - checkout
+      - run:
+          name: test
+          command: nim c -r tests/main.nim
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - build_dev
+      - build_alpine
