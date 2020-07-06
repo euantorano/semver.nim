@@ -1,24 +1,16 @@
 version: 2
 jobs:
   build:
-    working_directory: /usr/src/semver
     docker:
       - image: nimlang/nim
-    branches:
-      only:
-        - master
     steps:
       - checkout
       - run:
           name: test
           command: nimble test
   build_alpine:
-    working_directory: /usr/src/semver
     docker:
       - image: nimlang/nim:alpine
-    branches:
-      only:
-        - master
     steps:
       - checkout
       - run:
@@ -29,5 +21,4 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - build_dev
       - build_alpine
