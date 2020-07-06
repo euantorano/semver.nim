@@ -4,8 +4,6 @@ import lexbase
 from streams import Stream
 from strutils import `%`, parseInt
 
-import errors
-
 const
   decimalPoint*: char = '.'
   buildSeparator*: char = '-'
@@ -78,7 +76,9 @@ proc getDigit(p: var SemverParser, tok: var Token) =
       add(tok.literal, ch)
       inc(pos)
     else:
-      tok.kind = tkInvalid
+      tok = Token(
+        kind: tkInvalid
+      )
       break
   p.bufpos = pos
 
@@ -149,30 +149,40 @@ proc getDigitValue(p: var SemverParser): ParserEvent =
   ## Get the current digit value
   # Check for preceeding 0s.
   if len(p.tok.literal) > 1 and p.tok.literal[0] == '0':
-    result.kind = EventKind.error
-    result.errorMessage = errorStr(p, "Version numbers must not contain leading zeros")
+    result = ParserEvent(
+      kind: EventKind.error,
+      errorMessage: errorStr(p, "Version numbers must not contain leading zeros")
+    )
   else:
-    result.kind = EventKind.digit
-    result.value = parseInt(p.tok.literal)
+    result = ParserEvent(
+      kind: EventKind.digit,
+      value: parseInt(p.tok.literal)
+    )
     rawGetTok(p, p.tok)
 
 proc getBuildValue(p: var SemverParser): ParserEvent =
   ## Get the current digit value
-  result.kind = EventKind.build
-  result.content = p.tok.literal
+  result = ParserEvent(
+    kind: EventKind.build,
+    content: p.tok.literal
+  )
   rawGetTok(p, p.tok)
 
 proc getMetaDataValue(p: var SemverParser): ParserEvent =
   ## Get the current digit value
-  result.kind = EventKind.metadata
-  result.content = p.tok.literal
+  result = ParserEvent(
+    kind: EventKind.metadata,
+    content: p.tok.literal
+  )
   rawGetTok(p, p.tok)
 
 proc next*(p: var SemverParser): ParserEvent =
   ## Get the next event from the parser.
   case p.tok.kind:
   of tkEof:
-    result.kind = EventKind.eof
+    result = ParserEvent(
+      kind: EventKind.eof
+    )
   of tkDigit:
     result = getDigitValue(p)
   of tkBuild:
@@ -183,6 +193,8 @@ proc next*(p: var SemverParser): ParserEvent =
     rawGetTok(p, p.tok)
     result = next(p)
   else:
-    result.kind = EventKind.error
-    result.errorMessage = errorStr(p, "invalid token: " & p.tok.literal)
+    result = ParserEvent(
+      kind: EventKind.error,
+      errorMessage: errorStr(p, "invalid token: " & p.tok.literal)
+    )
     rawGetTok(p, p.tok)

@@ -100,8 +100,6 @@ proc parseVersion*(versionString: string): Version {.raises: [ParseError, Except
       result.metadata = evt.content
     of EventKind.error:
       raise newException(ParseError, evt.errorMessage)
-    else:
-      echo "OTHER EVENT: " & $evt
 
   if numDigits != 3:
     raise newException(ParseError, "Not enough integer values in version")
@@ -119,6 +117,13 @@ proc `$`*(v: Version): string =
     result &= "-" & v.build
   if len(v.metadata) > 0:
     result &= "+" & v.metadata
+
+proc isNumeric(s: string): bool =
+  result = true
+
+  for c in s:
+    if not isDigit(c):
+      return false
 
 proc compare(v1: Version, v2: Version, ignoreBuild: bool = false): int =
   ## Compare two versions
@@ -154,7 +159,7 @@ proc compare(v1: Version, v2: Version, ignoreBuild: bool = false): int =
       build2 = split(v2.build, ".")
       comp: int
     while i < len(build1) and i < len(build2):
-      if isDigit(build1[i]) and isDigit(build2[i]):
+      if isNumeric(build1[i]) and isNumeric(build2[i]):
         comp = cmp(parseInt(build1[i]), parseInt(build2[i]))
       else:
         comp = cmp(build1[i], build2[i])

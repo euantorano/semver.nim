@@ -15,10 +15,8 @@ Or add the following to your .nimble file:
 ```
 # Dependencies
 
-requires "semver >= 1.1.0"
+requires "semver >= 1.1.1"
 ```
-
-## [API Documentation](https://htmlpreview.github.io/?https://github.com/euantorano/semver.nim/blob/master/docs/semver.html)
 
 ## Usage
 
