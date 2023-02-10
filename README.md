@@ -24,7 +24,7 @@ requires "semver >= 1.1.1"
 import semver
 
 let version = newVersion(1, 2, 3)
-let usersVersion = parseVersion("v1.2.4-alpha") # Version(major: 1, minor: 2, path: 4, build: "alpha", metadata: "")
+let usersVersion = parseVersion("v1.2.4-alpha") # Version(major: 1, minor: 2, patch: 4, build: "alpha", metadata: "")
 
 check usersVersion > version # true
 check usersVersion == version # false
