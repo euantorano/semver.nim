@@ -1,4 +1,4 @@
-import semver, unittest
+import semver, unittest, osproc
 
 suite "semver tests":
   test "create version with negative":
@@ -141,3 +141,9 @@ suite "semver tests":
     check ver6 < ver7
     check ver7 < ver8
     check ver8 < ver1
+
+suite "issues":
+  test "#3 `node -v`":
+    let (output, _) = execCmdEx "node -v"
+    let currentNodeVersion = parseVersion(output)
+    echo "Node: " & $currentNodeVersion
