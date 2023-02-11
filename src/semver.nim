@@ -211,10 +211,6 @@ func isEqual*(v1: Version, v2: Version, ignoreBuild: bool = false): bool =
   ## Check whether two versions are equal, optionally excluding the build and metadata.
   compare(v1, v2, false) == 0
 
-func `==`*(v1: Version, v2: Version): bool =
-  ## Check whether two versions are equal.
-  isEqual(v1, v2, false)
-
 func isLessThan*(v1: Version, v2: Version): bool =
   ## Check whether v1 is less than v2.
   compare(v1, v2, false) < 0
@@ -223,10 +219,14 @@ func isGreaterThan*(v1: Version, v2: Version): bool =
   ## Check whether v1 is greater than v2.
   compare(v1, v2, false) > 0
 
+func `==`*(v1: Version, v2: Version): bool =
+  ## Check whether two versions are equal.
+  isEqual(v1, v2, false)
+
 func `<`*(v1: Version, v2: Version): bool =
   ## Check whether v1 is less than v2.
   isLessThan(v1, v2)
 
 func `<=`*(v1: Version, v2: Version): bool =
   ## Check whether v1 is less than or equal to v2.
-  isEqual(v1, v2) or isLessThan(v1, v2)
+  not isGreaterThan(v2, v1)
