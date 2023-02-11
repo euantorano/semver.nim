@@ -113,6 +113,9 @@ func parseVersion*(s: string): Version =
   ## Parse the given string `versionString` into a Version.
   ## according to the Backus–Naur Form of https://semver.org/
 
+  if s.len < "0.0.0".len:
+    raise newException(ParseError, "minimum string length is violated")
+
   var i =
     if s[0] == 'v': 1
     elif s[0] == '=' and s[1] == 'v': 2
