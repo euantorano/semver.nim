@@ -84,9 +84,11 @@ func parseVersionCore*(s: string, i: var int, v: var Version) =
 
 func parseDotSeparated*(s: string, i: var int, result: var string,
     boundChars: set[char]) =
-  var j = i
-  while j != s.len:
 
+  let start = i
+  var j = i
+  
+  while j != s.len:
     case s[j]
     of Letters, Digits, '-':
       inc j
@@ -104,7 +106,7 @@ func parseDotSeparated*(s: string, i: var int, result: var string,
     else:
       raise newException(ParseError, "invalid character: '" & s[j] & "'")
 
-  result = s[i..<j]
+  result = s[start..<j]
   i = j
 
 func parseVersion*(s: string): Version =
