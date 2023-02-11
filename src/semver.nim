@@ -87,7 +87,7 @@ func parseDotSeparated*(s: string, i: var int, result: var string,
 
   let start = i
   var j = i
-  
+
   while j != s.len:
     case s[j]
     of Letters, Digits, '-':
@@ -115,7 +115,7 @@ func parseVersion*(s: string): Version =
 
   var i =
     if s[0] == 'v': 1
-    elif s.startsWith "=v": 2
+    elif s[0] == '=' and s[1] == 'v': 2
     else: 0
 
   parseVersionCore s, i, result

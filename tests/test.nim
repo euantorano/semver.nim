@@ -19,7 +19,7 @@ suite "semver tests":
     check version.patch == 45
 
   test "parse simple full version":
-    const str = "v1.20.3"
+    const str = "=v1.20.3"
     let version = parseVersion(str)
     check version.major == 1
     check version.minor == 20
