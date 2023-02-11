@@ -113,6 +113,7 @@ func parseVersion*(s: string): Version =
 
   var i =
     if s[0] == 'v': 1
+    elif s.startsWith "=v": 2
     else: 0
 
   parseVersionCore s, i, result
