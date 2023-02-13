@@ -1,4 +1,4 @@
-import semver, unittest
+import semver, unittest, osproc
 
 suite "semver tests":
   test "create version with negative":
@@ -19,7 +19,7 @@ suite "semver tests":
     check version.patch == 45
 
   test "parse simple full version":
-    const str = "v1.20.3"
+    const str = "=v1.20.3"
     let version = parseVersion(str)
     check version.major == 1
     check version.minor == 20
@@ -47,6 +47,30 @@ suite "semver tests":
     check ver.minor == 2
     check ver.patch == 3
     check ver.build == "alpha"
+
+  test "build has dots":
+    let ver = parseVersion("11.2.3-beta+exp.sha.5114f85")
+    check ver.major == 11
+    check ver.minor == 2
+    check ver.patch == 3
+    check ver.build == "beta"
+    check ver.metadata == "exp.sha.5114f85"
+
+  test "meta has dashes":
+    let ver = parseVersion("2015.5.17+21AF26D3----117B344092BD")
+    check ver.major == 2015
+    check ver.minor == 5
+    check ver.patch == 17
+    check ver.build == ""
+    check ver.metadata == "21AF26D3----117B344092BD"
+
+  test "build & meta has dashes and dots":
+    let ver = parseVersion("44.30.11-hey-this.is.build--+meta.-data-.")
+    check ver.major == 44
+    check ver.minor == 30
+    check ver.patch == 11
+    check ver.build == "hey-this.is.build--"
+    check ver.metadata == "meta.-data-."
 
   test "parse with metadata":
     const str = "1.0.0+20130313144700"
@@ -141,3 +165,9 @@ suite "semver tests":
     check ver6 < ver7
     check ver7 < ver8
     check ver8 < ver1
+
+suite "issues":
+  test "#3 `node -v`":
+    let (output, _) = execCmdEx "node -v"
+    let currentNodeVersion = parseVersion(output)
+    echo "Node: " & $currentNodeVersion
