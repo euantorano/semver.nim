@@ -230,3 +230,7 @@ func `<`*(v1: Version, v2: Version): bool =
 func `<=`*(v1: Version, v2: Version): bool =
   ## Check whether v1 is less than or equal to v2.
   not isGreaterThan(v2, v1)
+
+func `>=`*(v1: Version, v2: Version): bool =
+  ## Check whether v1 is greater than or equal to v2.
+  not isLessThan(v2, v1)

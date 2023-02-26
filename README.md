@@ -1,4 +1,4 @@
-# semver.nim ![Build Status](https://api.travis-ci.org/euantorano/semver.nim.svg) [![CircleCI](https://circleci.com/gh/euantorano/semver.nim/tree/master.svg?style=svg)](https://circleci.com/gh/euantorano/semver.nim/tree/master)
+# semver.nim
 
 [Semantic versioning](http://semver.org/) parser for Nim.
 
@@ -15,7 +15,7 @@ Or add the following to your .nimble file:
 ```
 # Dependencies
 
-requires "semver >= 1.1.1"
+requires "semver >= 1.2.0"
 ```
 
 ## Usage
