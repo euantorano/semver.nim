@@ -149,6 +149,26 @@ suite "semver tests":
     let ver2 = newVersion(1, 2, 6, "alpha", "001")
     check ver1 <= ver2
 
+  test "Check whether naive version 1 is less than or equal to naive version 2 with operator":
+    let ver1 = newVersion(1, 0, 0)
+    let ver2 = newVersion(2, 0, 0)
+    check ver1 <= ver2
+
+  test "Check whether naive version 1 is greater than or equal to naive version 2 with operator":
+    let ver1 = newVersion(1, 0, 0)
+    let ver2 = newVersion(2, 0, 0)
+    check ver2 >= ver1
+
+  test "Check whether complex version 1 is less than or equal to complex version 2 with operator":
+    let ver1 = newVersion(1, 0, 0, "alpha", "001")
+    let ver2 = newVersion(2, 0, 0, "alpha", "001")
+    check ver1 <= ver2
+
+  test "Check whether complex version 1 is greater than or equal to complex version 2 with operator":
+    let ver1 = newVersion(1, 0, 0, "alpha", "001")
+    let ver2 = newVersion(2, 0, 0, "alpha", "001")
+    check ver2 >= ver1
+
   test "semver.org example: 1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta < 1.0.0-beta.2 < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0.":
     let ver1 = newVersion(1, 0, 0)
     let ver2 = newVersion(1, 0, 0, "alpha")
