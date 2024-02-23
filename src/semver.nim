@@ -198,8 +198,6 @@ func compare(v1: Version, v2: Version, ignoreBuild: bool = false): int =
         else:
           return comp
 
-        inc i
-
       # If build versions are the equal but one have further build version
       if i == len(build1) and i == len(build2): 0
       elif i == len(build1) and i < len(build2): -1
