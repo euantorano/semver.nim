@@ -1,6 +1,6 @@
 # Package
 
-version       = "1.2.1"
+version       = "1.2.2"
 author        = "Euan T"
 description   = "Semantic versioning parser for Nim"
 license       = "BSD-3-Clause"
