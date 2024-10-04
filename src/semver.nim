@@ -188,7 +188,7 @@ func compare(v1: Version, v2: Version, ignoreBuild: bool = false): int =
       while i < len(build1) and i < len(build2):
         comp =
           if isNumeric(build1[i]) and isNumeric(build2[i]):
-            cmp(parseInt(build1[i]), parseInt(build2[i]))
+            cmp(parseBiggestInt(build1[i]), parseBiggestInt(build2[i]))
           else:
             cmp(build1[i], build2[i])
 
